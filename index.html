@@ -76,6 +76,8 @@
   input.ans.no{border-color:var(--bad);background:var(--bad-bg)}
 
   button.btn{font-family:var(--sans);font-size:.9rem;font-weight:600;padding:10px 18px;border-radius:6px;border:none;cursor:pointer}
+  .signbtn{font-family:var(--mono);font-size:1rem;padding:10px 14px;min-width:52px}
+  .signbtn.neg{background:var(--navy);color:#fff;border-color:var(--navy)}
   .btn.primary{background:var(--navy);color:#fff}
   .btn.primary:hover{background:var(--navy-soft)}
   .btn.orange{background:var(--orange);color:#fff}
@@ -167,6 +169,7 @@
         <div id="hints"></div>
         <div class="data" id="data"></div>
         <div class="answer-row">
+          <button class="btn ghost signbtn" id="signBtn" onclick="toggleSign()" title="Flip sign, like +/- on your BAII Plus">+/−</button>
           <input class="ans" id="ansInput" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
           <button class="btn primary" id="checkBtn" onclick="checkAnswer()">Check</button>
           <button class="btn orange hidden" id="saveBtn" onclick="saveAnswer()">Save &amp; next</button>
@@ -438,6 +441,7 @@ function renderQ(){
   const inp=document.getElementById('ansInput');
   inp.value=state.entries[state.cur];
   inp.className='ans';
+  syncSignBtn();
   document.getElementById('feedback').innerHTML='';
   const checked=state.results[state.cur]!==null;
   const checkBtn=document.getElementById('checkBtn');
@@ -460,8 +464,27 @@ function renderQ(){
   renderDots();
 }
 
+function toggleSign(){
+  const inp=document.getElementById('ansInput');
+  if(inp.disabled)return;
+  let v=inp.value.trim();
+  if(v.startsWith('-')){v=v.slice(1);}
+  else{v='-'+v;}
+  inp.value=v;
+  syncSignBtn();
+  inp.focus();
+}
+function syncSignBtn(){
+  const inp=document.getElementById('ansInput');
+  const btn=document.getElementById('signBtn');
+  btn.classList.toggle('neg',inp.value.trim().startsWith('-'));
+}
 function parseAns(v){
-  const n=parseFloat(String(v).replace(/,/g,'').trim());
+  let s=String(v).replace(/,/g,'').trim();
+  // accept (70) accounting style as -70
+  const paren=s.match(/^\((.+)\)$/);
+  if(paren)s='-'+paren[1];
+  const n=parseFloat(s);
   return isNaN(n)?null:n;
 }
 function isCorrect(user,ans){
@@ -539,6 +562,7 @@ function submitExam(){
 document.getElementById('ansInput').addEventListener('keydown',e=>{
   if(e.key==='Enter'){state.mode==='study'?checkAnswer():saveAnswer();}
 });
+document.getElementById('ansInput').addEventListener('input',syncSignBtn);
 </script>
 </body>
 </html>
